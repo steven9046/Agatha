@@ -6,6 +6,7 @@ from loguru import logger
 import time
 import threading
 import json
+from cnocr import CnOcr
 
 regions = [(600, 1100, 900, 1258)]
 
@@ -42,8 +43,10 @@ class SnapWin():
         self.win = win  # 实例属性
         self.buttons = []
         self.button_names = ["start_button", "snap", "giveup_button", "get_reward", "next", "confirm_retreat"]
-        self.pages_names = ["main_page", "searching_player", "round_1", "round_2", "round_3", "round_4", "round_5", "round_6", "round_7"]
-        self.current_page = None
+        self.pages_names = ["main_page", "round_1", "round_2", "round_3", "round_4", "round_5", "round_6", "round_7"]
+        self.current_round = None
+        self.ocr = CnOcr()
+
     def loadButtons(self):
         for button_name in self.button_names:
             tmp_button = Button(button_name)
@@ -56,6 +59,25 @@ class SnapWin():
     #     for button in self.buttons:
     #         x,y = 
     #         button.
+
+    def checkEnergy(self, app_screenshot):
+        res = self.checkText(app_screenshot[-160:,400:500]) # 能量在中间 (1258, 900)
+        print(res)
+        self.current_energy = res[0]['text'][0]
+        print("Energy: ", self.current_energy)        
+
+    def checkRound(self, app_screenshot):
+        res = self.checkText(app_screenshot[-150:,-200:]) # 回合数在右下角
+        print(res)
+        self.current_round = res[1]['text'][0]
+        print("Round: ", self.current_round)
+
+            
+    def checkText(self, img):
+        return self.ocr.ocr(img) # list[{dict}]
+
+
+
 
 def get_screen():
     screenshot = pyautogui.screenshot()
@@ -89,7 +111,7 @@ if __name__ == "__main__":
     else:
         sanp_win = pyautogui.getWindowsWithTitle(snap_window_name)[0]
         resetWindow(sanp_win)
-        # sanp_win.activate()
+        sanp_win.activate()
         time.sleep(2) # 等待窗口切换到前台
         snapWin = SnapWin(sanp_win)
         snapWin.loadButtons()
@@ -97,16 +119,31 @@ if __name__ == "__main__":
     # thread = threading.Thread(target=thread_function, args=("1",))
 
 
-    app_screenshot = pyautogui.screenshot(region=(sanp_win.left, sanp_win.top, sanp_win.width, sanp_win.height))
-    print(type(app_screenshot))
-    app_screenshot = np.array(app_screenshot)
-    app_screenshot = cv2.cvtColor(app_screenshot, cv2.COLOR_RGB2BGR)
-    cv2.imshow('OpenCV Image', app_screenshot)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # app_screenshot = pyautogui.screenshot(region=(sanp_win.left, sanp_win.top, sanp_win.width, sanp_win.height))
+    # print(type(app_screenshot))
+    # app_screenshot = np.array(app_screenshot)
+    # app_screenshot = cv2.cvtColor(app_screenshot, cv2.COLOR_RGB2BGR)
+
+    app_screenshot = cv2.imread(os.path.join(os.getcwd(), 'marvel_script', 'resource', 'round_2.png'))
+
+    print("app_screenshot: ", app_screenshot.shape) #  (1258, 900, 3)
+
+
+    # cv2.imshow('OpenCV Image', app_screenshot[-140:,400:500]) # [-150:,-200:] 这个坐标大概是结束回合的按钮
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+
+    snapWin.checkRound(app_screenshot)
+    snapWin.checkEnergy(app_screenshot)
 
     # snapped = 0
     # while True:
+    #     # 1. 检查当前处于哪个界面
+    #     # snapWin.checkPage(app_screenshot) # 直接传递BGR格式的图像
+
+    #     # 打印识别结果
+    #     # print(result)
     #     #2. 查看当前有没有加倍, 如果有加倍就撤退
     #     if snapped:
     #         pyautogui.click(x=88, y=1166)
@@ -131,7 +168,7 @@ if __name__ == "__main__":
     #         snapped = 1
     #         # print("click withdraw: ", snapWin.buttons[2].location)
     #     # 1. 查看当前是否是标题界面，如果是则点击开始
-    #     elif snapWin.buttons[0].checkExisting((300是, 940, 300, 200)) :
+    #     elif snapWin.buttons[0].checkExisting((300, 940, 300, 200)) :
     #         print("click start : ", snapWin.buttons[0].location)
     #         pyautogui.click(snapWin.buttons[0].location)
     #     # break
