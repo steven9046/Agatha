@@ -6,7 +6,8 @@ from loguru import logger
 import time
 import threading
 import json
-from cnocr import CnOcr
+# from cnocr import CnOcr
+from paddleocr import PaddleOCR
 
 regions = [(600, 1100, 900, 1258)]
 
@@ -45,7 +46,7 @@ class SnapWin():
         self.button_names = ["start_button", "snap", "giveup_button", "get_reward", "next", "confirm_retreat"]
         self.pages_names = ["main_page", "round_1", "round_2", "round_3", "round_4", "round_5", "round_6", "round_7"]
         self.current_round = None
-        self.ocr = CnOcr()
+        self.ocr = PaddleOCR(use_angle_cls=True, lang="ch")
 
     def loadButtons(self):
         for button_name in self.button_names:
@@ -59,22 +60,45 @@ class SnapWin():
     #     for button in self.buttons:
     #         x,y = 
     #         button.
+    def checkCube(self, app_screenshot):
+        # 提取中间部分，数字所在位置
+        energy_area_blue = app_screenshot[100:180, 420:480,:1] # B
+        # 二值化
+        ret, thresh_trunc = cv2.threshold(energy_area_blue, 200, 255, cv2.THRESH_BINARY_INV)
+        # 找连通域
+        num_labels, labels_im, stats, centroids = cv2.connectedComponentsWithStats(thresh_trunc, 8, cv2.CV_32S)
+        # 找到联通阈面积大于 200 个像素的（那些小的是噪点）
+        for i in range(1, num_labels):  # 从1开始，因为0是背景
+            if stats[i][4] > 100: # 
+                # print("area : ",stats[i][4])
+                mask = (labels_im == i).astype(np.uint8) * 255
+                ret, thresh_trunc = cv2.threshold(mask, 0, 255, cv2.THRESH_BINARY) 
+                result = self.checkText(thresh_trunc)
+                print("Cube: ", result)
+                if result[0]:
+                    self.cube = result[0][0][1][0]
+                else:
+                    pass
+        # res = self.checkText(app_screenshot[-160:,400:500]) # 能量在中间 (1258, 900)
+        # print(res)
+        # self.current_energy = res[0][0][1][0]
+        print("Cube: ", self.cube)        
 
     def checkEnergy(self, app_screenshot):
         res = self.checkText(app_screenshot[-160:,400:500]) # 能量在中间 (1258, 900)
         print(res)
-        self.current_energy = res[0]['text'][0]
+        self.current_energy = res[0][0][1][0]
         print("Energy: ", self.current_energy)        
 
     def checkRound(self, app_screenshot):
         res = self.checkText(app_screenshot[-150:,-200:]) # 回合数在右下角
         print(res)
-        self.current_round = res[1]['text'][0]
+        self.current_round = res[0][1][1][0]
         print("Round: ", self.current_round)
 
             
     def checkText(self, img):
-        return self.ocr.ocr(img) # list[{dict}]
+        return self.ocr.ocr(img, cls=True) # list[{dict}]
 
 
 
@@ -119,12 +143,12 @@ if __name__ == "__main__":
     # thread = threading.Thread(target=thread_function, args=("1",))
 
 
-    # app_screenshot = pyautogui.screenshot(region=(sanp_win.left, sanp_win.top, sanp_win.width, sanp_win.height))
+    app_screenshot = pyautogui.screenshot(region=(sanp_win.left, sanp_win.top, sanp_win.width, sanp_win.height))
     # print(type(app_screenshot))
-    # app_screenshot = np.array(app_screenshot)
-    # app_screenshot = cv2.cvtColor(app_screenshot, cv2.COLOR_RGB2BGR)
+    app_screenshot = np.array(app_screenshot)
+    app_screenshot = cv2.cvtColor(app_screenshot, cv2.COLOR_RGB2BGR)
 
-    app_screenshot = cv2.imread(os.path.join(os.getcwd(), 'marvel_script', 'resource', 'round_2.png'))
+    # app_screenshot = cv2.imread(os.path.join(os.getcwd(), 'marvel_script', 'resource', 'round_2.png'))
 
     print("app_screenshot: ", app_screenshot.shape) #  (1258, 900, 3)
 
@@ -136,6 +160,7 @@ if __name__ == "__main__":
 
     snapWin.checkRound(app_screenshot)
     snapWin.checkEnergy(app_screenshot)
+    snapWin.checkCube(app_screenshot)
 
     # snapped = 0
     # while True:
