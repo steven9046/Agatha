@@ -89,7 +89,7 @@ if __name__ == "__main__":
     else:
         sanp_win = pyautogui.getWindowsWithTitle(snap_window_name)[0]
         resetWindow(sanp_win)
-        # sanp_win.activate()
+        sanp_win.activate()
         time.sleep(2) # 等待窗口切换到前台
         snapWin = SnapWin(sanp_win)
         snapWin.loadButtons()
@@ -97,44 +97,44 @@ if __name__ == "__main__":
     # thread = threading.Thread(target=thread_function, args=("1",))
 
 
-    app_screenshot = pyautogui.screenshot(region=(sanp_win.left, sanp_win.top, sanp_win.width, sanp_win.height))
-    print(type(app_screenshot))
-    app_screenshot = np.array(app_screenshot)
-    app_screenshot = cv2.cvtColor(app_screenshot, cv2.COLOR_RGB2BGR)
-    cv2.imshow('OpenCV Image', app_screenshot)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # app_screenshot = pyautogui.screenshot(region=(sanp_win.left, sanp_win.top, sanp_win.width, sanp_win.height))
+    # print(type(app_screenshot))
+    # app_screenshot = np.array(app_screenshot)
+    # app_screenshot = cv2.cvtColor(app_screenshot, cv2.COLOR_RGB2BGR)
+    # cv2.imshow('OpenCV Image', app_screenshot)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
-    # snapped = 0
-    # while True:
-    #     #2. 查看当前有没有加倍, 如果有加倍就撤退
-    #     if snapped:
-    #         pyautogui.click(x=88, y=1166)
-    #         time.sleep(1)
-    #         pyautogui.click(x=587, y=938)
-    #         snapped = 0
-    #         # if snapWin.buttons[5].checkExisting(searching_confidence=0.6):
-    #         #     pyautogui.click(snapWin.buttons[5].location)
-    #         #     snapped = 0
-    #         # continue
+    snapped = 0
+    while True:
+        #2. 查看当前有没有加倍, 如果有加倍就撤退
+        if snapped:
+            pyautogui.click(x=88, y=1166)
+            time.sleep(1)
+            pyautogui.click(x=587, y=938)
+            snapped = 0
+            # if snapWin.buttons[5].checkExisting(searching_confidence=0.6):
+            #     pyautogui.click(snapWin.buttons[5].location)
+            #     snapped = 0
+            # continue
         
-    #     # 3.查看有没有领取奖励按钮，如果有就点一下，然后再点下一步  
-    #     if snapWin.buttons[3].checkExisting((600, 1100, 900, 1258)) :
-    #         pyautogui.click(snapWin.buttons[3].location)
-    #         print("click reward : ", snapWin.buttons[3].location)
-    #     elif snapWin.buttons[4].checkExisting((600, 1100, 900, 1258)):
-    #         pyautogui.click(snapWin.buttons[4].location)
-    #         print("click next round: ", snapWin.buttons[4].location) 
-    #     elif snapWin.buttons[1].checkExisting((286, 96, 342, 139), 0.8) :  # X = 286, Y = 96  X = 628, Y = 235
-    #         # snapWin.buttons[2].checkExisting((600, 1100, 900, 1258)) # X = 14, Y = 1101 X = 222, Y = 1230
-    #         # pyautogui.click(x=88, y=1166) # 下一回合才能点
-    #         snapped = 1
-    #         # print("click withdraw: ", snapWin.buttons[2].location)
-    #     # 1. 查看当前是否是标题界面，如果是则点击开始
-    #     elif snapWin.buttons[0].checkExisting((300是, 940, 300, 200)) :
-    #         print("click start : ", snapWin.buttons[0].location)
-    #         pyautogui.click(snapWin.buttons[0].location)
-    #     # break
+        # 3.查看有没有领取奖励按钮，如果有就点一下，然后再点下一步  
+        if snapWin.buttons[3].checkExisting((600, 1100, 900, 1258)) :
+            pyautogui.click(snapWin.buttons[3].location)
+            print("click reward : ", snapWin.buttons[3].location)
+        elif snapWin.buttons[4].checkExisting((600, 1100, 900, 1258)):
+            pyautogui.click(snapWin.buttons[4].location)
+            print("click next round: ", snapWin.buttons[4].location) 
+        elif snapWin.buttons[1].checkExisting((286, 96, 342, 139), 0.8) :  # X = 286, Y = 96  X = 628, Y = 235
+            # snapWin.buttons[2].checkExisting((600, 1100, 900, 1258)) # X = 14, Y = 1101 X = 222, Y = 1230
+            # pyautogui.click(x=88, y=1166) # 下一回合才能点
+            snapped = 1
+            # print("click withdraw: ", snapWin.buttons[2].location)
+        # 1. 查看当前是否是标题界面，如果是则点击开始
+        elif snapWin.buttons[0].checkExisting((300, 940, 300, 200)) :
+            print("click start : ", snapWin.buttons[0].location)
+            pyautogui.click(snapWin.buttons[0].location)
+        # break
 
     currentMouseX, currentMouseY = pyautogui.position()
     # region=(600, 1100, 900, 1258)
