@@ -2,12 +2,17 @@ import pyautogui
 import cv2
 import os
 import numpy as np
-from loguru import logger
+# from loguru import logger
 import time
 import threading
 import json
 # from cnocr import CnOcr
 from paddleocr import PaddleOCR
+import logging
+
+logger = logging.getLogger('ppocr')
+logger.setLevel(logging.WARNING)
+
 
 regions = [(600, 1100, 900, 1258)]
 
@@ -45,9 +50,23 @@ class SnapWin():
         self.buttons = []
         self.button_names = ["start_button", "snap", "giveup_button", "get_reward", "next", "confirm_retreat"]
         self.pages_names = ["main_page", "round_1", "round_2", "round_3", "round_4", "round_5", "round_6", "round_7"]
-        self.current_round = None
         self.ocr = PaddleOCR(use_angle_cls=True, lang="ch")
 
+        self.round_idx = 0
+        self.rounds_6 = ["1/6", "2/6", "3/6", "4/6", "5/6", "最终回合"]
+        self.rounds_7 = ["1/7", "2/7", "3/7", "4/7", "5/7", "6/7", "最终回合"]
+        self.is_7_round = False
+
+        self.energy = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+        self.current_round = self.rounds_6[0]
+        self.current_energy = None
+        self.cube = None
+
+        self.snapped = 0
+        
+        self.total_round = 0
+
+        
     def loadButtons(self):
         for button_name in self.button_names:
             tmp_button = Button(button_name)
@@ -56,10 +75,11 @@ class SnapWin():
     def loadImg(self, path):
         return cv2.imread(path)
     
-    # def locateButtons(self):
-    #     for button in self.buttons:
-    #         x,y = 
-    #         button.
+    def retreat(self):
+        pyautogui.click(x=88, y=1166)
+        time.sleep(1)
+        pyautogui.click(x=587, y=938)
+
     def checkCube(self, app_screenshot):
         # 提取中间部分，数字所在位置
         energy_area_blue = app_screenshot[100:180, 420:480,:1] # B
@@ -84,24 +104,92 @@ class SnapWin():
         # self.current_energy = res[0][0][1][0]
         print("Cube: ", self.cube)        
 
+
+    ## 检测能量的优先级比较高，因为能量会变化, 所以应该
+    ## 这里应该是如何能够确定已经切换到下一个回合了，
+    ## 放置中... 每个回合之间有这个？有阿加莎时时被动的，需要检测这个，如果是自己放牌那就直接点击一次结束以后再检测
+    ## 但是如果没有放手牌，那就不会有放置中了, 这里需要设计一个比较复杂的逻辑啊
+
     def checkEnergy(self, app_screenshot):
-        res = self.checkText(app_screenshot[-160:,400:500]) # 能量在中间 (1258, 900)
+        # 返回的是一个 list
+        res = self.checkText(app_screenshot[-160:,400:500])[0] # 能量在中间 (1258, 900)
         print(res)
-        self.current_energy = res[0][0][1][0]
-        print("Energy: ", self.current_energy)        
+        ## res 得有内容，并且是检测出来了 [回合结束，1/6] 这种文字，才会去改当前回合数
+        if res and len(res) == 2:
+            ## 只有检测出变化了才会去改, 这样可以保持只修改一次回合数和能量数
+            ## 主要是能量会变，所以我只需要知道回合开始时的能量就好了
+            if self.current_energy != res[0][1][0]:
+                if res[0][1][0] in self.energy:
+                    self.current_energy = res[0][1][0]
+                    print("Updating Energy: ", self.current_energy)        
+
 
     def checkRound(self, app_screenshot):
-        res = self.checkText(app_screenshot[-150:,-200:]) # 回合数在右下角
-        print(res)
-        self.current_round = res[0][1][1][0]
-        print("Round: ", self.current_round)
+        res = self.checkText(app_screenshot[-150:,-200:])[0] # 回合数在右下角
+        # print(res)
+        # [
+        #   [   [[37.0, 24.0], [164.0, 33.0], [161.0, 66.0], [35.0, 56.0]],   ('结束回合', 0.9246547222137451)   ], 
+        #   [   [[71.0, 57.0], [125.0, 63.0], [121.0, 97.0], [66.0, 91.0]],   ('5/6', 0.9823111891746521)       ]
+        # ]
+        if  res and len(res) == 2:
+            # print("res[1][1][0]: ", res[1][1][0])
+            # print("res[0][1][0]: ", res[0][1][0])
+            if res[1][1][0] in self.rounds_6 : # and res[0][1][0] == "回合结束"
+                self.round_idx = self.rounds_6.index(res[1][1][0]) + 1
+                self.current_round = res[1][1][0]
+                self.is_7_round = False
+                # print("回合中... ", self.round_idx)
+            elif res[1][1][0] in self.rounds_7 : # and res[0][1][0] == "回合结束"
+                self.round_idx = self.rounds_7.index(res[1][1][0]) + 1
+                self.current_round = res[1][1][0]
+                self.is_7_round = True
+                # print("回合中... ", self.round_idx)
+            # elif res[0][1][0] != "回合结束":
+            #     print("放置卡牌中...")
+            #     self.round_idx += 1
+            # if self.current_round != res[1][1][0]:
+            #     # 检测结果可能出错，这里限制一下
+            #     if res[1][1][0] in self.rounds: 
+            #         self.current_round = res[1][1][0]
+            #         print("Updating Round: ", self.current_round)
 
-            
     def checkText(self, img):
         return self.ocr.ocr(img, cls=True) # list[{dict}]
 
+    ## 加倍的情况还是很多的，加倍不能跑！
+    # total round:  125
+    # 
+    def checkRetreat(self, img):
+        if self.buttons[1].checkExisting((286, 96, 342, 139), 0.8) :  # X = 286, Y = 96  X = 628, Y = 235
+            self.snapped = 1
+        if self.round_idx > 4:
+            if self.is_7_round:
+                print("7 回合啦，快跑！")
+                self.retreat()
+                return
+            # if self.snapped:
+            #     print("加倍啦，快跑！")
+            #     self.retreat()
+            #     return
 
+    def checkFinish(self, img):
+        if self.buttons[3].checkExisting((600, 1100, 900, 1258)) :
+            pyautogui.click(self.buttons[3].location)
+            print("click reward : ", self.buttons[3].location)
+            time.sleep(1)
+        if self.buttons[4].checkExisting((600, 1100, 900, 1258)):
+            pyautogui.click(self.buttons[4].location)
+            print("click next round: ", self.buttons[4].location) 
 
+    def checkStart(self, img):
+        if self.buttons[0].checkExisting((300, 940, 300, 200)) :
+            print("click start : ", self.buttons[0].location)
+            print("total round: ", self.total_round)
+            pyautogui.click(self.buttons[0].location)
+            time.sleep(1)
+            self.round_idx = 0
+            self.snapped = 0
+            self.total_round += 1
 
 def get_screen():
     screenshot = pyautogui.screenshot()
@@ -135,7 +223,9 @@ if __name__ == "__main__":
     else:
         sanp_win = pyautogui.getWindowsWithTitle(snap_window_name)[0]
         resetWindow(sanp_win)
+
         sanp_win.activate()
+        
         time.sleep(2) # 等待窗口切换到前台
         snapWin = SnapWin(sanp_win)
         snapWin.loadButtons()
@@ -143,14 +233,10 @@ if __name__ == "__main__":
     # thread = threading.Thread(target=thread_function, args=("1",))
 
 
-    app_screenshot = pyautogui.screenshot(region=(sanp_win.left, sanp_win.top, sanp_win.width, sanp_win.height))
-    # print(type(app_screenshot))
-    app_screenshot = np.array(app_screenshot)
-    app_screenshot = cv2.cvtColor(app_screenshot, cv2.COLOR_RGB2BGR)
 
     # app_screenshot = cv2.imread(os.path.join(os.getcwd(), 'marvel_script', 'resource', 'round_2.png'))
 
-    print("app_screenshot: ", app_screenshot.shape) #  (1258, 900, 3)
+    # print("app_screenshot: ", app_screenshot.shape) #  (1258, 900, 3)
 
 
     # cv2.imshow('OpenCV Image', app_screenshot[-140:,400:500]) # [-150:,-200:] 这个坐标大概是结束回合的按钮
@@ -158,45 +244,25 @@ if __name__ == "__main__":
     # cv2.destroyAllWindows()
 
 
-    snapWin.checkRound(app_screenshot)
-    snapWin.checkEnergy(app_screenshot)
-    snapWin.checkCube(app_screenshot)
+    # snapWin.checkRound(app_screenshot)
+    # snapWin.checkEnergy(app_screenshot)
+    # snapWin.checkCube(app_screenshot)
 
     # snapped = 0
-    # while True:
-    #     # 1. 检查当前处于哪个界面
-    #     # snapWin.checkPage(app_screenshot) # 直接传递BGR格式的图像
+    while True:
 
-    #     # 打印识别结果
-    #     # print(result)
-    #     #2. 查看当前有没有加倍, 如果有加倍就撤退
-    #     if snapped:
-    #         pyautogui.click(x=88, y=1166)
-    #         time.sleep(1)
-    #         pyautogui.click(x=587, y=938)
-    #         snapped = 0
-    #         # if snapWin.buttons[5].checkExisting(searching_confidence=0.6):
-    #         #     pyautogui.click(snapWin.buttons[5].location)
-    #         #     snapped = 0
-    #         # continue
-        
-    #     # 3.查看有没有领取奖励按钮，如果有就点一下，然后再点下一步  
-    #     if snapWin.buttons[3].checkExisting((600, 1100, 900, 1258)) :
-    #         pyautogui.click(snapWin.buttons[3].location)
-    #         print("click reward : ", snapWin.buttons[3].location)
-    #     elif snapWin.buttons[4].checkExisting((600, 1100, 900, 1258)):
-    #         pyautogui.click(snapWin.buttons[4].location)
-    #         print("click next round: ", snapWin.buttons[4].location) 
-    #     elif snapWin.buttons[1].checkExisting((286, 96, 342, 139), 0.8) :  # X = 286, Y = 96  X = 628, Y = 235
-    #         # snapWin.buttons[2].checkExisting((600, 1100, 900, 1258)) # X = 14, Y = 1101 X = 222, Y = 1230
-    #         # pyautogui.click(x=88, y=1166) # 下一回合才能点
-    #         snapped = 1
-    #         # print("click withdraw: ", snapWin.buttons[2].location)
-    #     # 1. 查看当前是否是标题界面，如果是则点击开始
-    #     elif snapWin.buttons[0].checkExisting((300, 940, 300, 200)) :
-    #         print("click start : ", snapWin.buttons[0].location)
-    #         pyautogui.click(snapWin.buttons[0].location)
-    #     # break
+        app_screenshot = pyautogui.screenshot(region=(sanp_win.left, sanp_win.top, sanp_win.width, sanp_win.height))
+        app_screenshot = np.array(app_screenshot)
+        app_screenshot = cv2.cvtColor(app_screenshot, cv2.COLOR_RGB2BGR)
+
+        snapWin.checkRound(app_screenshot)
+
+        snapWin.checkRetreat(app_screenshot)
+
+        snapWin.checkFinish(app_screenshot)
+
+        snapWin.checkStart(app_screenshot)
+        time.sleep(1)
 
     currentMouseX, currentMouseY = pyautogui.position()
     # region=(600, 1100, 900, 1258)
