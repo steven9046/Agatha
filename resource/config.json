@@ -1,0 +1,295 @@
+{
+    "game_buttons": [
+        {
+            "name": "game_start",
+            "position": [
+                440,
+                1000
+            ],
+            "icon": "game_start.png"
+        },
+        {
+            "name": "game_retreat",
+            "position": [
+                98,
+                1168
+            ],
+            "icon": "game_retreat.png"
+        },
+        {
+            "name": "game_confirm_retreat",
+            "position": [
+                568,
+                930
+            ],
+            "icon": "game_confirm_retreat.png"
+        },
+        {
+            "name": "game_get_reward",
+            "position": [
+                800,
+                1183
+            ],
+            "icon": "game_get_reward.png"
+        },
+        {
+            "name": "game_next_game",
+            "position": [
+                800,
+                1183
+            ],
+            "icon": "game_next_game.png"
+        },
+        {
+            "name": "game_snap",
+            "position": [
+                445,
+                155
+            ],
+            "icon": "game_snap.png"
+        },
+        {
+            "name": "round_finish",
+            "position": [
+                795,
+                1162
+            ],
+            "icon": "round_finish.png"
+        }  
+    ],
+    "info_buttons":[
+        {
+            "name": "round_energy",
+            "position": [
+                445,
+                1169
+            ]
+        },
+        {
+            "name": "round_self_info",
+            "position": [
+                65,
+                140
+            ]
+        }, 
+        {
+            "name": "round_enemy_info",
+            "position": [
+                822,
+                132
+            ]
+        }
+    ],
+    "info_areas":[
+        {
+            "name": "game_result",
+            "tl": [
+                260,
+                380
+            ],
+            "hw":[
+                80,
+                140
+            ]
+        }
+    ],
+    "battle_fields":[
+        {
+            "name": "field_1",
+            "position": [
+                238,
+                615
+            ],
+            "m_score_pos":[238,687],
+            "e_score_pos":[238,530]
+        },
+        {
+            "name": "field_2",
+            "position": [
+                440,
+                615
+            ],
+            "m_score_pos":[449,687],
+            "e_score_pos":[448,530]
+        },
+        {
+            "name": "field_3",
+            "position": [
+                655,
+                615
+            ],
+            "m_score_pos":[660,687],
+            "e_score_pos":[655,530]
+        }
+    ],
+    "cards_fields": [
+        {
+            "name": "m_card_1_1",
+            "position": [
+                190,
+                770
+            ]
+        },
+        {
+            "name": "m_card_1_2",
+            "position": [
+                275,
+                770
+            ]
+        },
+        {
+            "name": "m_card_1_3",
+            "position": [
+                190,
+                880
+            ]
+        },
+        {
+            "name": "m_card_1_4",
+            "position": [
+                275,
+                880
+            ]
+        },
+        {
+            "name": "m_card_2_1",
+            "position": [
+                410,
+                770
+            ]
+        },
+        {
+            "name": "m_card_2_2",
+            "position": [
+                480,
+                770
+            ]
+        },
+        {
+            "name": "m_card_2_3",
+            "position": [
+                410,
+                880
+            ]
+        },
+        {
+            "name": "m_card_2_4",
+            "position": [
+                480,
+                880
+            ]
+        },
+        {
+            "name": "m_card_3_1",
+            "position": [
+                610,
+                770
+            ]
+        },
+        {
+            "name": "m_card_3_2",
+            "position": [
+                695,
+                770
+            ]
+        },
+        {
+            "name": "m_card_3_3",
+            "position": [
+                610,
+                880
+            ]
+        },
+        {
+            "name": "m_card_3_4",
+            "position": [
+                695,
+                880
+            ]
+        },
+        {
+            "name": "e_card_1_1",
+            "position": [
+                190,
+                450
+            ]
+        },
+        {
+            "name": "e_card_1_2",
+            "position": [
+                275,
+                450
+            ]
+        },
+        {
+            "name": "e_card_1_3",
+            "position": [
+                190,
+                340
+            ]
+        },
+        {
+            "name": "e_card_1_4",
+            "position": [
+                275,
+                340
+            ]
+        },
+        {
+            "name": "e_card_2_1",
+            "position": [
+                410,
+                450
+            ]
+        },
+        {
+            "name": "e_card_2_2",
+            "position": [
+                480,
+                450
+            ]
+        },
+        {
+            "name": "e_card_2_3",
+            "position": [
+                410,
+                340
+            ]
+        },
+        {
+            "name": "e_card_2_4",
+            "position": [
+                480,
+                340
+            ]
+        },
+        {
+            "name": "e_card_3_1",
+            "position": [
+                610,
+                450
+            ]
+        },
+        {
+            "name": "e_card_3_2",
+            "position": [
+                695,
+                450
+            ]
+        },
+        {
+            "name": "e_card_3_3",
+            "position": [
+                610,
+                340
+            ]
+        },
+        {
+            "name": "e_card_3_4",
+            "position": [
+                695,
+                340
+            ]
+        }
+    ]
+}
